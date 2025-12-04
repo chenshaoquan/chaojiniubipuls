@@ -2,7 +2,7 @@
 # 远程测速自动安装脚本
 # 用途：将 send_mach_info.py 修改为使用远程 VPS 测速
 # 作者：自动覆盖测速项目
-# 使用方法：curl -sSL https://raw.githubusercontent.com/YOUR_REPO/install_remote_speedtest.sh | bash
+# 使用方法：curl -sSL https://raw.githubusercontent.com/chenshaoquan/chaojiniubipuls/main/install_remote_speedtest.sh | bash
 
 set -e
 
