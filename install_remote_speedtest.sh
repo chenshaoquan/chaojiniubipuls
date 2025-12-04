@@ -153,6 +153,7 @@ update_ip_only() {
     print_info "仅更新测速服务器 IP 地址..."
     
     # 解锁文件
+    print_info "解锁目标文件..."
     chattr -i "$TARGET_FILE" 2>/dev/null || true
     
     # 替换 remote_speedtest_via_vps 函数中的默认 IP
@@ -162,9 +163,11 @@ update_ip_only() {
     sed -i "s/default=\"[0-9.]*\", help=\"VPS host/default=\"$new_ip\", help=\"VPS host/g" "$TARGET_FILE"
     
     # 锁定文件
+    print_info "锁定目标文件..."
     chattr +i "$TARGET_FILE"
     
     print_success "IP 地址已更新为: $new_ip"
+    print_success "文件已重新锁定"
 }
 
 # 生成修改后的 Python 文件内容
