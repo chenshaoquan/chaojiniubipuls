@@ -4,8 +4,6 @@
 # 作者：自动覆盖测速项目
 # 使用方法：curl -sSL https://raw.githubusercontent.com/chenshaoquan/chaojiniubipuls/main/install_remote_speedtest.sh | bash
 
-set -e
-
 # 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -62,7 +60,12 @@ get_speedtest_server() {
         current_server=$(cat "$CONFIG_FILE" 2>/dev/null || echo "")
         if [ -n "$current_server" ]; then
             print_info "当前配置的测速服务器: ${GREEN}$current_server${NC}"
-            read -p "是否使用此服务器？(Y/n): " use_current
+            if [ -t 0 ]; then
+                read -p "是否使用此服务器？(Y/n): " use_current
+            else
+                read -p "是否使用此服务器？(Y/n): " use_current < /dev/tty || use_current="Y"
+            fi
+            
             if [[ "$use_current" =~ ^[Nn]$ ]]; then
                 current_server=""
             else
@@ -75,7 +78,15 @@ get_speedtest_server() {
     # 输入新的服务器地址
     while true; do
         echo ""
-        read -p "请输入测速服务器 IP 地址或域名: " server_input
+        if [ -t 0 ]; then
+            read -p "请输入测速服务器 IP 地址或域名: " server_input
+        else
+            # 尝试从 /dev/tty 读取，如果失败则退出
+            if ! read -p "请输入测速服务器 IP 地址或域名: " server_input < /dev/tty; then
+                print_error "无法读取输入。请不要使用管道运行，或尝试: bash install_remote_speedtest.sh"
+                exit 1
+            fi
+        fi
         
         if [ -z "$server_input" ]; then
             print_warning "服务器地址不能为空"
@@ -107,7 +118,13 @@ test_ssh_connection() {
     else
         print_warning "SSH 连接测试失败（这不会阻止安装，但可能需要配置 SSH 密钥）"
         print_info "建议运行: ssh-copy-id root@$SPEEDTEST_SERVER"
-        read -p "是否继续安装？(Y/n): " continue_install
+        
+        if [ -t 0 ]; then
+            read -p "是否继续安装？(Y/n): " continue_install
+        else
+            read -p "是否继续安装？(Y/n): " continue_install < /dev/tty || continue_install="Y"
+        fi
+        
         if [[ "$continue_install" =~ ^[Nn]$ ]]; then
             exit 1
         fi
@@ -140,6 +157,10 @@ create_backup() {
 
 # 检查文件是否已经修改过
 check_if_already_modified() {
+    if [ ! -f "$TARGET_FILE" ]; then
+        return 1
+    fi
+    
     if grep -q "def remote_speedtest_via_vps" "$TARGET_FILE" 2>/dev/null; then
         print_warning "检测到文件已经包含远程测速功能"
         return 0
@@ -1209,12 +1230,35 @@ main() {
     
     # 检查是否已修改
     if check_if_already_modified; then
-        print_info "文件已包含远程测速功能，将仅更新服务器地址"
+        print_info "文件已包含远程测速功能"
+        echo ""
+        echo "请选择操作:"
+        echo "1. 仅更新服务器地址 (默认, 保留其他修改)"
+        echo "2. 强制重写文件 (恢复完整功能, 覆盖所有修改)"
+        
+        if [ -t 0 ]; then
+            read -p "请输入选项 [1/2]: " choice
+        else
+            read -p "请输入选项 [1/2]: " choice < /dev/tty || choice="1"
+        fi
+        
+        if [[ "$choice" == "2" ]]; then
+            print_info "用户选择强制重写文件"
+            FORCE_REWRITE=true
+        else
+            print_info "用户选择仅更新服务器地址"
+            FORCE_REWRITE=false
+        fi
+    else
+        FORCE_REWRITE=true
+    fi
+    
+    if [ "$FORCE_REWRITE" = false ]; then
+        # 仅更新 IP 地址
         
         # 创建备份
         create_backup
         
-        # 仅更新 IP 地址
         update_ip_only "$SPEEDTEST_SERVER"
         
         # 验证修改
@@ -1226,7 +1270,11 @@ main() {
             exit 1
         fi
     else
-        print_info "首次安装，将写入完整的远程测速功能"
+        if check_if_already_modified; then
+             print_info "正在强制重写文件..."
+        else
+             print_info "首次安装，将写入完整的远程测速功能"
+        fi
         
         # 创建备份
         create_backup
