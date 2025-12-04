@@ -147,6 +147,26 @@ check_if_already_modified() {
     return 1
 }
 
+# 仅更新 IP 地址（用于已修改过的文件）
+update_ip_only() {
+    local new_ip="$1"
+    print_info "仅更新测速服务器 IP 地址..."
+    
+    # 解锁文件
+    chattr -i "$TARGET_FILE" 2>/dev/null || true
+    
+    # 替换 remote_speedtest_via_vps 函数中的默认 IP
+    sed -i "s/def remote_speedtest_via_vps(vps_host=\"[^\"]*\"/def remote_speedtest_via_vps(vps_host=\"$new_ip\"/g" "$TARGET_FILE"
+    
+    # 替换命令行参数的默认值
+    sed -i "s/default=\"[0-9.]*\", help=\"VPS host/default=\"$new_ip\", help=\"VPS host/g" "$TARGET_FILE"
+    
+    # 锁定文件
+    chattr +i "$TARGET_FILE"
+    
+    print_success "IP 地址已更新为: $new_ip"
+}
+
 # 生成修改后的 Python 文件内容
 generate_modified_file() {
     print_info "生成修改后的文件内容..."
@@ -1186,25 +1206,42 @@ main() {
     
     # 检查是否已修改
     if check_if_already_modified; then
-        print_info "文件已包含远程测速功能，将更新服务器地址"
-    fi
-    
-    # 创建备份
-    create_backup
-    
-    # 生成修改后的文件
-    temp_file=$(generate_modified_file)
-    
-    # 写入文件
-    write_modified_file "$temp_file"
-    
-    # 验证修改
-    if verify_modification; then
-        show_usage_info
-        exit 0
+        print_info "文件已包含远程测速功能，将仅更新服务器地址"
+        
+        # 创建备份
+        create_backup
+        
+        # 仅更新 IP 地址
+        update_ip_only "$SPEEDTEST_SERVER"
+        
+        # 验证修改
+        if verify_modification; then
+            show_usage_info
+            exit 0
+        else
+            print_error "验证失败，请检查文件"
+            exit 1
+        fi
     else
-        print_error "验证失败，请检查文件"
-        exit 1
+        print_info "首次安装，将写入完整的远程测速功能"
+        
+        # 创建备份
+        create_backup
+        
+        # 生成修改后的文件
+        temp_file=$(generate_modified_file)
+        
+        # 写入文件
+        write_modified_file "$temp_file"
+        
+        # 验证修改
+        if verify_modification; then
+            show_usage_info
+            exit 0
+        else
+            print_error "验证失败，请检查文件"
+            exit 1
+        fi
     fi
 }
 
