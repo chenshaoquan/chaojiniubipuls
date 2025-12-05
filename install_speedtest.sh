@@ -11,11 +11,16 @@ echo -e "${GREEN}  VPS 测速服务器配置工具${NC}"
 echo -e "${GREEN}================================${NC}"
 echo ""
 
-# 交互式输入 VPS IP 地址
-read -p "请输入 VPS 测速服务器 IP 地址 (默认: 206.206.78.250): " VPS_IP
-VPS_IP=${VPS_IP:-206.206.78.250}
-
-echo -e "${YELLOW}使用的 VPS IP: ${VPS_IP}${NC}"
+# 检查是否通过命令行参数传入 IP
+if [ -n "$1" ]; then
+    VPS_IP="$1"
+    echo -e "${YELLOW}使用命令行参数指定的 VPS IP: ${VPS_IP}${NC}"
+else
+    # 交互式输入 VPS IP 地址
+    read -p "请输入 VPS 测速服务器 IP 地址 (默认: 206.206.78.250): " VPS_IP </dev/tty
+    VPS_IP=${VPS_IP:-206.206.78.250}
+    echo -e "${YELLOW}使用的 VPS IP: ${VPS_IP}${NC}"
+fi
 echo ""
 
 # 目标文件路径
