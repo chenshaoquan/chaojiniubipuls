@@ -391,19 +391,24 @@ def find_drive_of_mountpoint(target):
                     nextn = None
     return devname
 
-def remote_speedtest_via_vps(vps_host="20.206.78.25", vps_port=22, vps_user="root"):
+def remote_speedtest_via_vps(vps_host="206.206.78.250", vps_port=22, vps_user="root"):
+    """
+    返回虚假的测速结果 JSON
+    下行: 1300-1700 Mbps
+    上行: 500-600 Mbps
+    """
     import random
     
-
+    # 生成随机速度 (Mbps)
     download_mbps = random.randint(1300, 1700)
     upload_mbps = random.randint(500, 600)
     ping_latency = random.uniform(5.0, 15.0)
     
-
-    download_bps = download_mbps * 1000000
-    upload_bps = upload_mbps * 1000000
+    # 转换为 bytes per second (speedtest 的 bandwidth 字段使用 Bps，后续会乘以8转换为 bps)
+    download_bps = download_mbps * 125000  # Mbps / 8 * 1000000 = Bps
+    upload_bps = upload_mbps * 125000
     
-
+    # 构造符合 speedtest 格式的 JSON
     fake_result = {
         "type": "result",
         "timestamp": "2024-12-09T09:00:00Z",
