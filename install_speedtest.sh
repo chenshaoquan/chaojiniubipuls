@@ -664,7 +664,6 @@ if __name__ == '__main__':
     parser.add_argument("--nw-disk", action='store_true')
     parser.add_argument("--vps-host", action='store', default="206.206.78.250", help="VPS host for remote speedtest")
     parser.add_argument("--vps-user", action='store', default="root", help="VPS SSH user")
-    parser.add_argument("--local-speedtest", action='store_true', help="Force local speedtest instead of remote")
     args = parser.parse_args()
     output = None
     try:
@@ -759,18 +758,8 @@ if __name__ == '__main__':
         if r == 3 or args.speedtest:
             print("speedtest")
             try:
-                # 根据参数选择测速方式
-                if args.local_speedtest:
-                    print("Using local speedtest (forced by --local-speedtest)")
-                    output = epsilon_greedyish_speedtest()
-                else:
-                    # 优先使用远程 VPS 测速
-                    output = remote_speedtest_via_vps(vps_host=args.vps_host, vps_user=args.vps_user)
-                    
-                    # 如果远程测速失败，回退到本地测速
-                    if output is None:
-                        print("Remote speedtest failed, falling back to local speedtest")
-                        output = epsilon_greedyish_speedtest()
+                # 只使用远程 VPS 测速
+                output = remote_speedtest_via_vps(vps_host=args.vps_host, vps_user=args.vps_user)
             except subprocess.CalledProcessError as e:
                 output = e.output.decode('utf-8')
                 print(output)
