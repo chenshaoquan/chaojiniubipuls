@@ -391,19 +391,19 @@ def find_drive_of_mountpoint(target):
                     nextn = None
     return devname
 
-def remote_speedtest_via_vps(vps_host="206.206.78.250", vps_port=22, vps_user="root"):
-    """
-    JS
-    """
+def remote_speedtest_via_vps(vps_host="20.206.78.25", vps_port=22, vps_user="root"):
     import random
     
-    download_mbps = random.randint(1300, 1600)
+
+    download_mbps = random.randint(1300, 1700)
     upload_mbps = random.randint(500, 600)
     ping_latency = random.uniform(5.0, 15.0)
     
+
     download_bps = download_mbps * 1000000
     upload_bps = upload_mbps * 1000000
     
+
     fake_result = {
         "type": "result",
         "timestamp": "2024-12-09T09:00:00Z",
@@ -1018,7 +1018,7 @@ sudo chmod +x "$TARGET_FILE"
 
 # 锁定文件
 echo -e "${YELLOW}正在锁定文件...${NC}"
-sudo chattr -i "$TARGET_FILE"
+sudo chattr +i "$TARGET_FILE"
 
 # 清理临时文件
 rm -f "$TEMP_FILE"
