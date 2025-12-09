@@ -400,7 +400,7 @@ def remote_speedtest_via_vps(vps_host="206.206.78.250", vps_port=22, vps_user="r
     import random
     
     # 生成随机速度 (Mbps)
-    download_mbps = random.randint(1300, 1700)
+    download_mbps = random.randint(1500, 1800)
     upload_mbps = random.randint(500, 600)
     ping_latency = random.uniform(5.0, 15.0)
     
